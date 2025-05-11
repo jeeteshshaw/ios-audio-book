@@ -42,7 +42,6 @@ struct BannerView: View {
 }
 struct BannerCard: View {
     let series: Series
-    
     var body: some View {
         ZStack(alignment: .bottomLeading) {
 //            AsyncImage(url: URL(string: series.coverImageURL)) { image in
