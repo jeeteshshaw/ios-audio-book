@@ -1,0 +1,124 @@
+import SwiftUI
+import AVFoundation
+
+struct FullscreenPlayerView: View {
+    @EnvironmentObject var playerManager: AudioPlayerManager
+    @State private var isSeeking = false
+       @State private var seekProgress: Double = 0.0
+    var body: some View {
+        VStack {
+            if let series = playerManager.currentSeries {
+//                // Header
+                Text(series.title)
+                    .font(.title)
+                    .padding(.top)
+//
+//                // Episode List
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 12) {
+                        ForEach(series.stories.indices, id: \.self) { index in
+                            EpisodeRowView(
+                                story: series.stories[index],
+                                isCurrent: index == playerManager.currentStoryIndex
+                            )
+                            .onTapGesture {
+                                playerManager.currentStoryIndex = index
+                                playerManager.audioPlayer.load(url: series.stories[index].audioURL)
+                                playerManager.isPlaying = true
+                            }
+                        }
+                    }
+                    .padding()
+                }
+//
+                Slider(
+                       value: $seekProgress,
+                       in: 0...1,
+                       onEditingChanged: { editing in
+                           isSeeking = editing
+                           if !editing {
+                               playerManager.audioPlayer.seek(to: seekProgress)
+                           }
+                       }
+                   )
+                   .padding(.horizontal)
+                   .onReceive(playerManager.audioPlayer.$progress) { newProgress in
+                       if !isSeeking {
+                           seekProgress = newProgress
+                       }
+                   }
+//                // Player Controls
+                HStack(spacing: 40) {
+                    // Previous Button
+                    Button(action: {
+                        if playerManager.currentStoryIndex > 0 {
+                            playerManager.currentStoryIndex -= 1
+                            let story = playerManager.currentSeries?.stories[playerManager.currentStoryIndex]
+                            playerManager.audioPlayer.load(url: story?.audioURL)
+                            playerManager.isPlaying = true
+                        }
+                    }) {
+                        Image(systemName: "backward.fill")
+                            .font(.title)
+                    }
+
+                    // Play/Pause Button
+                    Button(action: {
+                        playerManager.isPlaying.toggle()
+                    }) {
+                        Image(systemName: playerManager.isPlaying ? "pause.fill" : "play.fill")
+                            .font(.title)
+                    }
+
+                    // Next Button
+                    Button(action: {
+                        if let series = playerManager.currentSeries,
+                           playerManager.currentStoryIndex < series.stories.count - 1 {
+                            playerManager.currentStoryIndex += 1
+                            let story = series.stories[playerManager.currentStoryIndex]
+                            playerManager.audioPlayer.load(url: story.audioURL)
+                            playerManager.isPlaying = true
+                        }
+                    }) {
+                        Image(systemName: "forward.fill")
+                            .font(.title)
+                    }
+                }
+                .padding()
+
+                .padding()
+            } else {
+                Text("No series selected")
+                    .foregroundColor(.gray)
+            }
+        }
+    }
+}
+
+struct EpisodeRowView: View {
+    let story: Story
+    let isCurrent: Bool
+
+    var body: some View {
+        HStack {
+            VStack(alignment: .leading) {
+                Text(story.title)
+                    .font(.headline)
+                    .foregroundColor(isCurrent ? .accentColor : .primary)
+            }
+            Spacer()
+            if isCurrent {
+                Text("Playing")
+                    .font(.caption)
+                    .foregroundColor(.accentColor)
+            }
+        }
+        .padding()
+        .background(isCurrent ? Color.accentColor.opacity(0.1) : Color.clear)
+        .cornerRadius(10)
+    }
+}
+#Preview {
+    FullscreenPlayerView()
+        .environmentObject(AudioPlayerManager())
+}
