@@ -18,4 +18,10 @@ struct Series: Identifiable, Codable {
     let description: String
     let coverImageURL: String
     let stories: [Story]
+    
+    
+    func getStory(at index: Int) -> Story? {
+            guard index >= 0 && index < stories.count else { return nil }
+            return stories[index]
+        }
 }

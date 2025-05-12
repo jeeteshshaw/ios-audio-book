@@ -4,7 +4,10 @@ import AVFoundation
 struct FullscreenPlayerView: View {
     @EnvironmentObject var playerManager: AudioPlayerManager
     @State private var isSeeking = false
-       @State private var seekProgress: Double = 0.0
+    @State private var seekProgress: Double = 0.0
+    
+    
+    
     var body: some View {
         VStack {
             if let series = playerManager.currentSeries {
@@ -31,6 +34,12 @@ struct FullscreenPlayerView: View {
                     .padding()
                 }
 //
+                HStack{
+                    Text(String(formatTime(playerManager.audioPlayer.playedTime)))
+                    Spacer()
+                    Text(String(formatTime(playerManager.audioPlayer.duration)))
+                }.padding()
+               
                 Slider(
                        value: $seekProgress,
                        in: 0...1,
@@ -64,6 +73,7 @@ struct FullscreenPlayerView: View {
 
                     // Play/Pause Button
                     Button(action: {
+                        playerManager.audioPlayer.playPause()
                         playerManager.isPlaying.toggle()
                     }) {
                         Image(systemName: playerManager.isPlaying ? "pause.fill" : "play.fill")
@@ -93,6 +103,13 @@ struct FullscreenPlayerView: View {
             }
         }
     }
+    func formatTime(_ time: Double) -> String {
+          guard !time.isNaN && !time.isInfinite else { return "00:00" }
+          let totalSeconds = Int(time)
+          let minutes = totalSeconds / 60
+          let seconds = totalSeconds % 60
+          return String(format: "%02d:%02d", minutes, seconds)
+      }
 }
 
 struct EpisodeRowView: View {

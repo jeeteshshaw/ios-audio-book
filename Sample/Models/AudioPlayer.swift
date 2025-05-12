@@ -10,6 +10,9 @@ class AudioPlayer: ObservableObject {
     @Published var isPlaying = false
     @Published var isBuffering = false
     @Published var progress: Double = 0.0 // 0.0 to 1.0
+    @Published var duration: Double = 0.0
+    @Published var playedTime: Double = 0.0
+    
 
     private var currentURL: URL?
 
@@ -20,11 +23,14 @@ class AudioPlayer: ObservableObject {
             return
         }
 
+       
         // Stop and remove previous observer
         stop()
 
         currentURL = audioURL
         player = AVPlayer(url: audioURL)
+        duration = player?.currentItem?.duration.seconds ?? 0.0
+        playedTime = 0.0
         observeProgress() // <- make sure this is called
         play()
     }
@@ -62,6 +68,8 @@ class AudioPlayer: ObservableObject {
     func seek(to progress: Double) {
         guard let duration = player?.currentItem?.duration.seconds,
               duration.isFinite else { return }
+        
+        self.duration = duration
 
         let time = CMTime(seconds: duration * progress, preferredTimescale: 600)
         player?.seek(to: time)
@@ -81,6 +89,8 @@ class AudioPlayer: ObservableObject {
                   let duration = player.currentItem?.duration.seconds,
                   duration > 0 else { return }
             self.progress = time.seconds / duration
+            self.playedTime = time.seconds
+            self.duration = duration
         }
     }
 
