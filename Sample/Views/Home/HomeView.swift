@@ -8,6 +8,7 @@ struct HomeView: View {
     @State private var currentIndex = 0
     @State private var isLoading = true // <- Add loading state
     @StateObject private var seriesService = RemoteSeriesService()
+    @StateObject private var appVersionCheck = RemoteAppVersionService()
 
 
     @EnvironmentObject var playerManager: AudioPlayerManager
@@ -76,6 +77,9 @@ struct HomeView: View {
                     .environmentObject(playerManager)
                     .edgesIgnoringSafeArea(.top)
             }
+            .sheet(isPresented: $appVersionCheck.showUpdateSheet){
+                UpdateSheet(onDismiss: {appVersionCheck.showUpdateSheet = false})
+            }
 
             .onAppear {
                 // Fetch the stories and update the loading state
@@ -83,6 +87,7 @@ struct HomeView: View {
                     print(seriesService.series)
                     isLoading = false
                 } )
+                appVersionCheck.fetchAppVersion(completion: {_ in })
             }
         }
     }
