@@ -25,9 +25,9 @@ struct FullscreenPlayerView: View {
                                 isCurrent: index == playerManager.currentStoryIndex
                             )
                             .onTapGesture {
-                                playerManager.currentStoryIndex = index
-                                playerManager.audioPlayer.load(url: series.stories[index].audioURL)
-                                playerManager.isPlaying = true
+                                
+                                playerManager.setSeries(series, startIndex: index)
+                               
                             }
                         }
                     }

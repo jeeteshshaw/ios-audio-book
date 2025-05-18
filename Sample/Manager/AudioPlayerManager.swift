@@ -7,6 +7,7 @@ struct MockData {
     
     static let mockSeries = Series(id: 1, title: "Sample Series", description: "A simple sample series.", coverImageURL: "", stories: [mockStory])
 }
+
 class AudioPlayerManager: ObservableObject {
     static let shared = AudioPlayerManager()
     
@@ -14,8 +15,14 @@ class AudioPlayerManager: ObservableObject {
     @Published var currentStoryIndex: Int = 0
     @Published var isPlaying: Bool = false
     @Published var showFullPlayer: Bool = false
+    
+    private let seriesKey = "currentSeries"
+    private let indexKey = "currentStoryIndex"
+    
     private var cancellables = Set<AnyCancellable>()
 
+  
+    
     var audioPlayer = AudioPlayer()
     
     private var nowPlayingInfoCenter: MPNowPlayingInfoCenter {
@@ -27,6 +34,7 @@ class AudioPlayerManager: ObservableObject {
     }
 
     
+
     init() {
         setupMediaControls()
         NotificationCenter.default.publisher(for: .AVPlayerItemDidPlayToEndTime)
@@ -34,6 +42,8 @@ class AudioPlayerManager: ObservableObject {
                        self?.playNextStory()
                    }
                    .store(in: &cancellables)
+        self.loadPersistedData()
+        self.loadUrl()
         // Set up static data (mock series and story)
 //        setSeries(MockData.mockSeries, startIndex: 0)
     }
@@ -42,7 +52,7 @@ class AudioPlayerManager: ObservableObject {
         if currentStoryIndex > 0 {
             currentStoryIndex -= 1
             let story = currentSeries?.stories[currentStoryIndex]
-            audioPlayer.load(url: story?.audioURL)
+            audioPlayer.loadAudio(url: story?.audioURL)
             isPlaying = true
         }
     }
@@ -51,7 +61,7 @@ class AudioPlayerManager: ObservableObject {
         if currentStoryIndex < (currentSeries?.stories.count ?? 0) - 1 {
             currentStoryIndex += 1
             let story = currentSeries?.stories[currentStoryIndex]
-            audioPlayer.load(url: story?.audioURL)
+            audioPlayer.loadAudio(url: story?.audioURL)
             isPlaying = true
         }
     }
@@ -70,11 +80,27 @@ class AudioPlayerManager: ObservableObject {
         let story = currentSeries?.getStory(at: startIndex)
         
         // Load the audio URL and start playback
-        audioPlayer.load(url: story?.audioURL)
+        audioPlayer.loadAudio(url: story?.audioURL)
         isPlaying = true // Update state
         updateNowPlayingInfo(for: story)
+        self.persistData()
     }
     
+    func loadUrl () {
+        audioPlayer.stop()
+        
+        // Update current series and story
+
+        
+        // Fetch the story and ensure the audio URL is valid
+        let story = currentSeries?.getStory(at: self.currentStoryIndex)
+        
+        // Load the audio URL and start playback
+        audioPlayer.loadAudio(url: story?.audioURL)
+        self.audioPlayer.pause()
+        updateNowPlayingInfo(for: story)
+        self.persistData()
+    }
     
     func togglePlayPause() {
         if isPlaying {
@@ -146,4 +172,21 @@ class AudioPlayerManager: ObservableObject {
     private func onComplete() {
         skipToNextStory()
     }
+    private func persistData() {
+            let encoder = JSONEncoder()
+            if let data = try? encoder.encode(currentSeries) {
+                UserDefaults.standard.set(data, forKey: seriesKey)
+            }
+            UserDefaults.standard.set(currentStoryIndex, forKey: indexKey)
+        }
+
+        private func loadPersistedData() {
+            let decoder = JSONDecoder()
+            if let data = UserDefaults.standard.data(forKey: seriesKey),
+               let series = try? decoder.decode(Series.self, from: data) {
+                self.currentSeries = series
+            }
+            self.currentStoryIndex = UserDefaults.standard.integer(forKey: indexKey)
+        }
+
 }

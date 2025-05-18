@@ -4,6 +4,9 @@ import Combine
 import SwiftUI
 
 class AudioPlayer: ObservableObject {
+    
+    
+    
     @Published var player: AVPlayer?
     private var timeObserverToken: Any?
 
@@ -13,11 +16,12 @@ class AudioPlayer: ObservableObject {
     @Published var duration: Double = 0.0
     @Published var playedTime: Double = 0.0
     
-
+    private var presistManager = PersistManager()
+    
     private var currentURL: URL?
 
     // MARK: - Load New Audio
-    func load(url: String?) {
+    func loadAudio(url: String?) {
         guard let urlString = url, let audioURL = URL(string: urlString) else {
             print("Invalid or nil audio URL")
             return

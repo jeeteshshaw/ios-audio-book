@@ -1,5 +1,5 @@
 import SwiftUI
-import SwiftUI
+import FirebaseAnalytics
 
 struct HomeView: View {
     let isLongStory: Bool // <- Use to filter stories
@@ -13,6 +13,11 @@ struct HomeView: View {
 
     @EnvironmentObject var playerManager: AudioPlayerManager
 
+    func logEvent(){
+        Analytics.logEvent("screen", parameters: [
+          "name": "home" as NSObject,
+        ])
+    }
     var filteredStories: [Series] {
         seriesService.series
 //        SampleData.series
