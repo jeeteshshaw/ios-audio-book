@@ -60,12 +60,7 @@ struct FullscreenPlayerView: View {
                 HStack(spacing: 40) {
                     // Previous Button
                     Button(action: {
-                        if playerManager.currentStoryIndex > 0 {
-                            playerManager.currentStoryIndex -= 1
-                            let story = playerManager.currentSeries?.stories[playerManager.currentStoryIndex]
-                            playerManager.audioPlayer.load(url: story?.audioURL)
-                            playerManager.isPlaying = true
-                        }
+                        playerManager.playPreviousStory()
                     }) {
                         Image(systemName: "backward.fill")
                             .font(.title)
@@ -82,13 +77,7 @@ struct FullscreenPlayerView: View {
 
                     // Next Button
                     Button(action: {
-                        if let series = playerManager.currentSeries,
-                           playerManager.currentStoryIndex < series.stories.count - 1 {
-                            playerManager.currentStoryIndex += 1
-                            let story = series.stories[playerManager.currentStoryIndex]
-                            playerManager.audioPlayer.load(url: story.audioURL)
-                            playerManager.isPlaying = true
-                        }
+                        playerManager.playNextStory()
                     }) {
                         Image(systemName: "forward.fill")
                             .font(.title)

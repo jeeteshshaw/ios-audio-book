@@ -1,4 +1,5 @@
 import Foundation
+import Combine
 import MediaPlayer
 
 struct MockData {
@@ -13,7 +14,8 @@ class AudioPlayerManager: ObservableObject {
     @Published var currentStoryIndex: Int = 0
     @Published var isPlaying: Bool = false
     @Published var showFullPlayer: Bool = false
-    
+    private var cancellables = Set<AnyCancellable>()
+
     var audioPlayer = AudioPlayer()
     
     private var nowPlayingInfoCenter: MPNowPlayingInfoCenter {
@@ -23,13 +25,38 @@ class AudioPlayerManager: ObservableObject {
     private var remoteCommandCenter: MPRemoteCommandCenter {
         return MPRemoteCommandCenter.shared()
     }
+
     
     init() {
         setupMediaControls()
-        
+        NotificationCenter.default.publisher(for: .AVPlayerItemDidPlayToEndTime)
+                   .sink { [weak self] _ in
+                       self?.playNextStory()
+                   }
+                   .store(in: &cancellables)
         // Set up static data (mock series and story)
 //        setSeries(MockData.mockSeries, startIndex: 0)
     }
+    
+    func playPreviousStory() {
+        if currentStoryIndex > 0 {
+            currentStoryIndex -= 1
+            let story = currentSeries?.stories[currentStoryIndex]
+            audioPlayer.load(url: story?.audioURL)
+            isPlaying = true
+        }
+    }
+    
+    func playNextStory() {
+        if currentStoryIndex < (currentSeries?.stories.count ?? 0) - 1 {
+            currentStoryIndex += 1
+            let story = currentSeries?.stories[currentStoryIndex]
+            audioPlayer.load(url: story?.audioURL)
+            isPlaying = true
+        }
+    }
+    
+    
     
     func setSeries(_ series: Series, startIndex: Int) {
         // Stop any current playback
@@ -47,6 +74,7 @@ class AudioPlayerManager: ObservableObject {
         isPlaying = true // Update state
         updateNowPlayingInfo(for: story)
     }
+    
     
     func togglePlayPause() {
         if isPlaying {
@@ -114,5 +142,8 @@ class AudioPlayerManager: ObservableObject {
         guard let currentSeries = currentSeries else { return }
         currentStoryIndex = (currentStoryIndex - 1 + currentSeries.stories.count) % currentSeries.stories.count
         setSeries(currentSeries, startIndex: currentStoryIndex)
+    }
+    private func onComplete() {
+        skipToNextStory()
     }
 }

@@ -4,7 +4,7 @@ import Combine
 import SwiftUI
 
 class AudioPlayer: ObservableObject {
-    private var player: AVPlayer?
+    @Published var player: AVPlayer?
     private var timeObserverToken: Any?
 
     @Published var isPlaying = false
