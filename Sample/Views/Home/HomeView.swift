@@ -88,6 +88,7 @@ struct HomeView: View {
 
             .onAppear {
                 // Fetch the stories and update the loading state
+                logEvent()
                 seriesService.fetchSeries(from: "https://raw.githubusercontent.com/jeeteshshaw/audio-book-data/refs/heads/main/SeriesList.json", completion:{_ in
                     print(seriesService.series)
                     isLoading = false

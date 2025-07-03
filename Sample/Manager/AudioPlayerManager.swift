@@ -1,6 +1,7 @@
 import Foundation
 import Combine
 import MediaPlayer
+import FirebaseAnalytics
 
 struct MockData {
     static let mockStory = Story(id: 1, title: "Sample Story", audioURL: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", coverImageURL: "", seriesId: "sample-series")
@@ -84,6 +85,10 @@ class AudioPlayerManager: ObservableObject {
         isPlaying = true // Update state
         updateNowPlayingInfo(for: story)
         self.persistData()
+        Analytics.logEvent("series", parameters: [
+            "title": series.title as NSObject,
+            "episode": story?.title ?? "" as NSObject
+        ])
     }
     
     func loadUrl () {
@@ -100,6 +105,7 @@ class AudioPlayerManager: ObservableObject {
         self.audioPlayer.pause()
         updateNowPlayingInfo(for: story)
         self.persistData()
+        
     }
     
     func togglePlayPause() {

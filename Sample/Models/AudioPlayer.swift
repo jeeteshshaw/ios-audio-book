@@ -37,6 +37,8 @@ class AudioPlayer: ObservableObject {
         playedTime = 0.0
         observeProgress() // <- make sure this is called
         play()
+        
+        
     }
 
     // MARK: - Play / Pause
